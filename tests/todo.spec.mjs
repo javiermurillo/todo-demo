@@ -11,6 +11,7 @@ const INDEX = "file://" + path.resolve(__dirname, "..", "index.html");
 
 test.beforeEach(async ({ page }) => {
   await page.goto(INDEX);
+  await page.waitForFunction(() => typeof document.querySelector('[data-testid="todo-input"]')?.focus === "function");
 });
 
 async function addItem(page, text) {
@@ -35,14 +36,14 @@ test("add: appends one item with trimmed text and clears input", async ({ page }
   await addItem(page, "buy milk");
   const items = page.locator('[data-testid="todo-item"]');
   await expect(items).toHaveCount(1);
-  await expect(items.first()).toHaveText("buy milk");
+  await expect(items.first().locator(".todo-item__text")).toHaveText("buy milk");
   await expect(items.first()).not.toHaveClass(/done/);
   await expect(page.locator('[data-testid="todo-input"]')).toHaveValue("");
 });
 
 test("add: leading and trailing whitespace is trimmed", async ({ page }) => {
   await addItem(page, "  buy milk  ");
-  await expect(page.locator('[data-testid="todo-item"]').first()).toHaveText("buy milk");
+  await expect(page.locator('[data-testid="todo-item"]').first().locator(".todo-item__text")).toHaveText("buy milk");
 });
 
 // --- Requirement: Toggle a todo as done ---
@@ -74,7 +75,7 @@ test("delete: removes exactly the targeted item", async ({ page }) => {
   await page.locator('[data-testid="todo-item"]').first().locator('[data-testid="todo-delete"]').click();
   const items = page.locator('[data-testid="todo-item"]');
   await expect(items).toHaveCount(1);
-  await expect(items.first()).toHaveText("b");
+  await expect(items.first().locator(".todo-item__text")).toHaveText("b");
 });
 
 test("delete: empty list still has the list container and focused input", async ({ page }) => {
@@ -143,7 +144,7 @@ test("keyboard: Enter in input adds the item", async ({ page }) => {
   await page.locator('[data-testid="todo-input"]').fill("z");
   await page.locator('[data-testid="todo-input"]').press("Enter");
   await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(1);
-  await expect(page.locator('[data-testid="todo-item"]').first()).toHaveText("z");
+  await expect(page.locator('[data-testid="todo-item"]').first().locator(".todo-item__text")).toHaveText("z");
 });
 
 test("keyboard: Enter on toggle fires toggle only", async ({ page }) => {
@@ -165,7 +166,10 @@ test("keyboard: Space on delete fires delete only", async ({ page }) => {
 
 test("keyboard: Tab order is input -> add -> toggle -> delete", async ({ page }) => {
   await addItem(page, "x");
-  await page.locator("body").click(); // reset focus
+  // Click an inert area (the title) to deselect the form, then tab
+  // forward as a user would. Click on h1 is safe: h1 is not focusable
+  // by default and removes focus from any currently-focused control.
+  await page.locator("h1.title").click();
   await page.keyboard.press("Tab");
   await expect(page.locator('[data-testid="todo-input"]')).toBeFocused();
   await page.keyboard.press("Tab");

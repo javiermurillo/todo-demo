@@ -7,7 +7,7 @@ const REPO = path.resolve(__dirname, "..");
 
 export default defineConfig({
   testDir: "./tests",
-  fullyParallel: true,
+  fullyParallel: false,
   retries: 0,
   workers: 1,
   reporter: "list",

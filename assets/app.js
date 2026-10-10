@@ -4,8 +4,9 @@
 // and read of input.value. Never trim before checking emptiness so
 // a single space still triggers the empty-input branch.
 //
-// Every data-testid is created inside the item factory below. Do
-// not introduce data-testid attributes anywhere else.
+// Every dynamic data-testid (todo-item / todo-toggle / todo-delete)
+// is created inside the item factory below. The static ones
+// (todo-input / todo-add / todo-list) live in index.html.
 
 (function () {
   "use strict";
