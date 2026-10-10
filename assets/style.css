@@ -1,0 +1,183 @@
+/* assets/style.css — arcade CRT visual system.
+   Palette tokens at :root; everything else uses var(--*) or
+   relative pixel sizes. No gradients other than the scanline
+   overlay; no border-radius anywhere. */
+
+:root {
+  --bg: #0b0a1a;
+  --neon-magenta: #ff2bd6;
+  --neon-cyan: #22f6ff;
+  --neon-yellow: #fff066;
+  --neon-dim: #6a6a8a;
+  --ink: #efeaff;
+
+  --px: 2px;
+  --font: "Press Start 2P", "VT323", monospace;
+}
+
+* {
+  box-sizing: border-box;
+  image-rendering: pixelated;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.4;
+  min-height: 100vh;
+}
+
+/* Scanline overlay — sits above content visually, but
+   pointer-events:none so it never intercepts clicks. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.35) 0,
+    rgba(0, 0, 0, 0.35) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  z-index: 9999;
+}
+
+.cabinet {
+  max-width: 640px;
+  margin: 32px auto;
+  padding: 24px;
+  border: var(--px) solid var(--neon-cyan);
+  background: #050510;
+}
+
+.title {
+  font-size: 24px;
+  margin: 0 0 24px;
+  color: var(--neon-magenta);
+  text-shadow:
+    var(--px) 0 0 var(--neon-cyan),
+    0 var(--px) 0 var(--neon-yellow);
+  letter-spacing: 2px;
+}
+
+.input-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.px-input {
+  flex: 1;
+  padding: 10px 12px;
+  background: var(--bg);
+  color: var(--neon-yellow);
+  border: var(--px) solid var(--neon-cyan);
+  border-radius: 0;
+  font-family: var(--font);
+  font-size: 12px;
+  outline: none;
+}
+
+.px-input:focus {
+  border-color: var(--neon-magenta);
+  box-shadow: inset 0 0 0 2px var(--neon-magenta);
+}
+
+.px-btn {
+  padding: 10px 16px;
+  background: var(--bg);
+  color: var(--neon-cyan);
+  border: var(--px) solid var(--neon-cyan);
+  border-radius: 0;
+  font-family: var(--font);
+  font-size: 12px;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+
+.px-btn:hover,
+.px-btn:focus {
+  color: var(--bg);
+  background: var(--neon-cyan);
+  outline: none;
+}
+
+.px-btn--primary {
+  color: var(--neon-magenta);
+  border-color: var(--neon-magenta);
+}
+
+.px-btn--primary:hover,
+.px-btn--primary:focus {
+  background: var(--neon-magenta);
+  color: var(--bg);
+}
+
+.todo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: var(--px) solid var(--neon-yellow);
+}
+
+.todo-list:empty::before {
+  content: "NO ITEMS YET";
+  display: block;
+  padding: 16px;
+  color: var(--neon-dim);
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: var(--px) solid var(--neon-dim);
+}
+
+.todo-item:last-child {
+  border-bottom: none;
+}
+
+.todo-item__text {
+  flex: 1;
+  font-size: 12px;
+  color: var(--neon-yellow);
+}
+
+.todo-item.done .todo-item__text {
+  text-decoration: line-through;
+  opacity: 0.5;
+  color: var(--neon-dim);
+}
+
+.todo-item__btn {
+  background: var(--bg);
+  border: var(--px) solid var(--neon-cyan);
+  border-radius: 0;
+  color: var(--neon-cyan);
+  font-family: var(--font);
+  font-size: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.todo-item__btn--del {
+  border-color: var(--neon-magenta);
+  color: var(--neon-magenta);
+}
+
+.todo-item__btn--del:hover,
+.todo-item__btn--del:focus {
+  background: var(--neon-magenta);
+  color: var(--bg);
+}
