@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+# Pre-commit hook for repos using OpenSpec.
+#
+# Performs two checks, in order:
+#   1. STAGED-DIFF check: if the staged diff touches
+#      openspec/changes/<id>/ (non-archived), validate that id with
+#      `openspec validate <id> --strict`. Block on failure.
+#   2. KANBAN BINDING check: if the staged diff touches code paths
+#      (assets/, index.html, tests/), look up every non-terminal
+#      task on the active Kanban board and require that its
+#      `idempotency_key` (passed at creation time, kebab-case) maps
+#      to a valid `openspec/changes/<key>/`. Block on any missing
+#      or invalid change.
+#
+# Why idempotency_key instead of task id? Hermes task ids are
+# generated as `t_<hex>` and not configurable, but the operator
+# passes `--idempotency-key=<slug>` at `hermes kanban create` time.
+# That key is what we treat as the change id. See
+# docs/kanban-openspec-policy.md for the full contract.
+#
+# Install by pointing core.hooksPath at this directory:
+#   git config core.hooksPath scripts/hooks
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+ACTIVE_BOARD="todo-demo"
+HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
+BOARD_DB="$HERMES_HOME/kanban/boards/$ACTIVE_BOARD/kanban.db"
+
+if ! command -v openspec >/dev/null 2>&1; then
+  printf 'pre-commit: "openspec" not found on PATH. Install with: npm i -g @fission-ai/openspec\n' >&2
+  exit 1
+fi
+
+if ! command -v sqlite3 >/dev/null 2>&1; then
+  printf 'pre-commit: "sqlite3" not found on PATH. Install with: brew install sqlite3\n' >&2
+  exit 1
+fi
+
+FAILED=0
+
+# ---------------------------------------------------------------------------
+# 1. STAGED-DIFF check
+# ---------------------------------------------------------------------------
+
+IDS=""
+while IFS= read -r path; do
+  case "$path" in
+    openspec/changes/archive/*) continue ;;
+    openspec/changes/*/*)
+      id=$(printf '%s\n' "$path" | awk -F/ '{print $3}')
+      case " $IDS " in
+        *" $id "*) ;;
+        *) IDS="$IDS $id" ;;
+      esac
+      ;;
+  esac
+done <<EOF_IDS
+$(git diff --cached --name-only --diff-filter=ACMR)
+EOF_IDS
+
+for id in $IDS; do
+  if [ -d "openspec/changes/$id" ]; then
+    printf 'pre-commit: [openspec] validating change "%s"\n' "$id"
+    if ! openspec validate "$id" --strict; then
+      printf 'pre-commit: [openspec] validate "%s" FAILED\n' "$id" >&2
+      FAILED=1
+    fi
+  fi
+done
+
+# ---------------------------------------------------------------------------
+# 2. KANBAN BINDING check
+# ---------------------------------------------------------------------------
+
+CODE_TOUCHED=0
+while IFS= read -r path; do
+  case "$path" in
+    assets/*) CODE_TOUCHED=1 ;;
+    index.html) CODE_TOUCHED=1 ;;
+    tests/*) CODE_TOUCHED=1 ;;
+  esac
+done <<EOF_CODE
+$(git diff --cached --name-only --diff-filter=ACMR)
+EOF_CODE
+
+if [ "$CODE_TOUCHED" -eq 1 ]; then
+  if [ ! -f "$BOARD_DB" ]; then
+    printf 'pre-commit: [kanban] board DB not found at %s\n' "$BOARD_DB" >&2
+    FAILED=1
+  else
+    # Pull every non-terminal task with its idempotency_key. Tasks
+    # without a key are violations of the policy.
+    while IFS='|' read -r status key; do
+      [ -z "$status" ] && continue
+      case "$status" in
+        done|archived|cancelled) continue ;;
+      esac
+
+      if [ -z "$key" ] || [ "$key" = "" ]; then
+        printf 'pre-commit: [kanban] task on board "%s" has no idempotency_key. Re-create with: hermes kanban --board %s create --idempotency-key=<slug> "..."\n' \
+          "$ACTIVE_BOARD" "$ACTIVE_BOARD" >&2
+        FAILED=1
+        continue
+      fi
+
+      if [ ! -d "openspec/changes/$key" ]; then
+        printf 'pre-commit: [kanban] task idempotency_key "%s" (status=%s) has no openspec change at openspec/changes/%s/. Create one before committing code.\n' \
+          "$key" "$status" "$key" >&2
+        FAILED=1
+        continue
+      fi
+
+      printf 'pre-commit: [kanban] validating openspec change for task "%s"\n' "$key"
+      if ! openspec validate "$key" --strict; then
+        printf 'pre-commit: [kanban] validate "%s" FAILED\n' "$key" >&2
+        FAILED=1
+      fi
+    done < <(sqlite3 -separator '|' "$BOARD_DB" \
+      "SELECT status, idempotency_key FROM tasks WHERE idempotency_key IS NOT NULL AND idempotency_key != '';" 2>/dev/null)
+  fi
+fi
+
+if [ "$FAILED" -ne 0 ]; then
+  printf 'pre-commit: blocked. Fix the errors above (or move the task to done/archived/cancelled) and try again.\n' >&2
+  exit 1
+fi

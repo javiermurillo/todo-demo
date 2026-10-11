@@ -1,0 +1,13 @@
+{
+  "name": "demo-todo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "openspec:validate": "openspec validate todo-arcade-crt-static-ui --strict"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}
