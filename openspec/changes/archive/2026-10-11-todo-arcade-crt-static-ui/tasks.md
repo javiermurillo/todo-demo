@@ -11,68 +11,68 @@ tokens and event wiring.
 Each item below adds a Playwright case in `tests/todo.spec.mjs` that
 must fail before the corresponding GREEN step lands.
 
-- [ ] **Add: empty input is rejected.**
+- [x] **Add: empty input is rejected.**
   Test: with `page.goto("file://" + repo + "/index.html")`,
   `page.locator('[data-testid="todo-input"]').fill("")` and click
   `[data-testid="todo-add"]`; assert `todo-list` has no `todo-item`
   children. Run `npx playwright test tests/todo.spec.mjs -g "empty input"`
   — must be RED today.
 
-- [ ] **Add: non-empty input appends one item.**
+- [x] **Add: non-empty input appends one item.**
   Test: fill input with `"buy milk"`, click Add, assert exactly one
   `todo-item` appears with text "buy milk" and input is cleared. Run
   `npx playwright test -g "appends one item"` — must be RED.
 
-- [ ] **Add: leading/trailing whitespace is trimmed.**
+- [x] **Add: leading/trailing whitespace is trimmed.**
   Test: fill input with `"  buy milk  "`, click Add, assert item text
   is `"buy milk"`. Run `npx playwright test -g "whitespace is trimmed"`
   — must be RED.
 
-- [ ] **Toggle: marking done applies `aria-pressed="true"` and `done`
+- [x] **Toggle: marking done applies `aria-pressed="true"` and `done`
   class.** Test: add `"x"`, click its toggle, assert
   `aria-pressed="true"` and class list contains `done`. Run
   `npx playwright test -g "marking done"` — must be RED.
 
-- [ ] **Toggle: unmarking restores.**
+- [x] **Toggle: unmarking restores.**
   Test: toggle twice, assert `aria-pressed="false"` and `done` class
   removed on the second click. Run `npx playwright test -g "unmarking"`
   — must be RED.
 
-- [ ] **Delete: removes exactly the targeted item.**
+- [x] **Delete: removes exactly the targeted item.**
   Test: add `"a"` and `"b"`, click delete on the first item, assert
   only `"b"` remains. Run `npx playwright test -g "deleting"` — must
   be RED.
 
-- [ ] **Delete: empty list still has the list container.**
+- [x] **Delete: empty list still has the list container.**
   Test: add `"x"`, delete it, assert `todo-list` exists with zero
   children and input has focus. Run `npx playwright test -g "empty list"`
   — must be RED.
 
-- [ ] **Visual: bitmap font is the rendered typeface.**
+- [x] **Visual: bitmap font is the rendered typeface.**
   Test: read computed `font-family` of `body`; assert it starts with
   `"Press Start 2P"`. Run `npx playwright test -g "bitmap font"` —
   must be RED.
 
-- [ ] **Visual: scanline overlay is non-blocking.**
+- [x] **Visual: scanline overlay is non-blocking.**
   Test: assert `body::before` has `pointer-events: none` (via
   `evaluate` reading the rule) AND clicking through it lands on a
   todo item. Run `npx playwright test -g "scanline"` — must be RED.
 
-- [ ] **Visual: hard pixel borders everywhere.**
+- [x] **Visual: hard pixel borders everywhere.**
   Test: assert each container's computed `border-radius` is `0px`.
   Run `npx playwright test -g "pixel borders"` — must be RED.
 
-- [ ] **Keyboard: Enter in input adds the item.**
+- [x] **Keyboard: Enter in input adds the item.**
   Test: focus input, fill `"z"`, press Enter, assert one item
   appears. Run `npx playwright test -g "Enter in input"` — must be
   RED.
 
-- [ ] **Keyboard: Tab order is input → add → toggle → delete …**
+- [x] **Keyboard: Tab order is input → add → toggle → delete …**
   Test: from a fresh page, Tab N times and assert focus matches the
   expected sequence. Run `npx playwright test -g "Tab order"` — must
   be RED.
 
-- [ ] **Hooks: every interactive element carries its `data-testid`.**
+- [x] **Hooks: every interactive element carries its `data-testid`.**
   Test: assert presence of all six anchors on a freshly loaded page
   with one item. Run `npx playwright test -g "data-testid"` — must
   be RED.
@@ -82,14 +82,14 @@ Re-run the whole §1 set together with
 
 ## 2. GREEN — minimum change to pass
 
-- [ ] **Add `package.json`** declaring `@playwright/test` as a
+- [x] **Add `package.json`** declaring `@playwright/test` as a
   devDependency and a `"test:e2e": "playwright test"` script. Run
   `npm install` — must succeed.
 
-- [ ] **Add `.gitignore`** excluding `node_modules/`,
+- [x] **Add `.gitignore`** excluding `node_modules/`,
   `test-results/`, `playwright-report/`.
 
-- [ ] **Create `index.html`** with:
+- [x] **Create `index.html`** with:
   - `<!doctype html>`, `<html lang="en">`, charset + viewport meta.
   - `<link rel="stylesheet" href="assets/style.css">`.
   - `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">`.
@@ -98,7 +98,7 @@ Re-run the whole §1 set together with
     `<ul data-testid="todo-list">`.
   - `<script src="assets/app.js" defer></script>`.
 
-- [ ] **Create `assets/app.js`** with handlers for:
+- [x] **Create `assets/app.js`** with handlers for:
   - Click on Add → append item.
   - `keydown` Enter on input → same as click Add.
   - Click on toggle → flip `aria-pressed` and `done` class.
@@ -106,7 +106,7 @@ Re-run the whole §1 set together with
   - Each new item carries `data-testid="todo-item"`,
     `data-testid="todo-toggle"`, `data-testid="todo-delete"`.
 
-- [ ] **Create `assets/style.css`** with:
+- [x] **Create `assets/style.css`** with:
   - `:root` custom properties for the four palette tokens
     (`--bg`, `--neon-magenta`, `--neon-cyan`, `--neon-yellow`).
   - `body { background: var(--bg); font-family: "Press Start 2P", monospace; }`.
@@ -118,29 +118,29 @@ Re-run `npx playwright test` — all §1 cases must be GREEN.
 
 ## 3. REFACTOR — extract and harden
 
-- [ ] Confirm palette is referenced only via custom properties (no
+- [x] Confirm palette is referenced only via custom properties (no
   raw hex literals outside `:root`). Re-run §1 — must stay GREEN.
 
-- [ ] Confirm the item factory in `assets/app.js` is the only place
+- [x] Confirm the item factory in `assets/app.js` is the only place
   that creates `data-testid` values (grep for `data-testid` outside
   that function — must be zero). Re-run §1 — must stay GREEN.
 
-- [ ] Add a short comment at the top of `assets/app.js` documenting
+- [x] Add a short comment at the top of `assets/app.js` documenting
   the order of guards: empty-input check before read of `value`. No
   behavior change.
 
 ## 4. Integration validation
 
-- [ ] `cd ~/Projects/demo-todo && npx playwright install chromium`
+- [x] `cd ~/Projects/demo-todo && npx playwright install chromium`
   succeeds.
-- [ ] `npx playwright test` — full suite GREEN.
-- [ ] `openspec validate todo-arcade-crt-static-ui --strict` —
+- [x] `npx playwright test` — full suite GREEN.
+- [x] `openspec validate todo-arcade-crt-static-ui --strict` —
   GREEN.
-- [ ] Open `index.html` directly in a browser via `file://` and
+- [x] Open `index.html` directly in a browser via `file://` and
   visually confirm scanlines, bitmap font, neon palette. Document
   with a screenshot saved to `docs/screenshot.png` (out of scope
   for the PR but useful as validation evidence).
-- [ ] **Branch hygiene:** this change has no parent branch
+- [x] **Branch hygiene:** this change has no parent branch
   dependency — it is the first commit in a brand-new repo.
   `git log --oneline` should show a single commit once §3 is
   complete.
